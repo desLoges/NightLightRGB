@@ -54,30 +54,7 @@ void loop() {
   oldState = newState;
 }
 
-void startShow(int i) {
-  switch(i){
-    case 0: colorWipe(strip.Color(0, 0, 0), 50);    // Black/off
-            break;
-    case 1: colorWipe(strip.Color(255, 0, 0), 50);  // Red
-            break;
-    case 2: colorWipe(strip.Color(0, 255, 0), 50);  // Green
-            break;
-    case 3: colorWipe(strip.Color(0, 0, 255), 50);  // Blue
-            break;
-    case 4: theaterChase(strip.Color(127, 127, 127), 50); // White
-            break;
-    case 5: theaterChase(strip.Color(127,   0,   0), 50); // Red
-            break;
-    case 6: theaterChase(strip.Color(  0,   0, 127), 50); // Blue
-            break;
-    case 7: rainbow(20);
-            break;
-    case 8: rainbowCycle(20);
-            break;
-    case 9: theaterChaseRainbow(50);
-            break;
-  }
-}
+
 
 // Fill the dots one after the other with a color
 void colorWipe(uint32_t c, uint8_t wait) {
@@ -99,6 +76,9 @@ void rainbow(uint8_t wait) {
     delay(wait);
   }
 }
+
+
+
 
 // Slightly different, this makes the rainbow equally distributed throughout
 void rainbowCycle(uint8_t wait) {

@@ -3,8 +3,12 @@
 
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
-  #include <avr/power.h>
+#include <avr/power.h>
 #endif
+
+#include "printf.h"
+
+extern HardwareSerial Serial;
 
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
@@ -20,6 +24,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800
 
 int delayval = 500; // delay for half a second
 
+uint8_t r_array[]={80,175,0};
 ///////////////////////////////////////////////////////////////
 
 
@@ -27,23 +32,37 @@ int delayval = 500; // delay for half a second
 // The colours are a transition r - g - b - back to r.
 uint32_t Wheel(byte WheelPos) {
   WheelPos = 255 - WheelPos;
-  if(WheelPos < 90) {
-    return strip.Color(250 - WheelPos * 3, 5, WheelPos * 3);
+
+  if(WheelPos < 85) {
+
+    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
   }
-  if(WheelPos < 165) {
-    WheelPos -= 90;
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+
     return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
   }
-  WheelPos -= 165;
+  WheelPos -= 170;
+
   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
 
+//uint32_t RandomDimmer(void){
+
+
+  //return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+//}
 
 void rainbow(uint8_t wait) {
   uint16_t i, j;
+  uint32_t randNumber;
+  randNumber = random(1, 5);
+  Serial.print(F("\n rand:"));
+  Serial.print(randNumber);
 
   for(j=0; j<256; j++) {
     for(i=0; i<strip.numPixels(); i++) {
+
       strip.setPixelColor(i, Wheel((i+j)));
     }
     strip.show();
@@ -54,10 +73,19 @@ void rainbow(uint8_t wait) {
 // Slightly different, this makes the rainbow equally distributed throughout
 void rainbowCycle(uint16_t wait) {
   uint16_t i, j;
+  uint32_t color;
+
 
   for(j=0; j<256; j++) { // 5 cycles of all colors on wheel
     for(i=0; i< strip.numPixels(); i++) {
-      strip.setPixelColor(i, Wheel((i * 256 / strip.numPixels()) + j));
+      uint8_t randNumber;
+      randNumber = random(0, 2);
+      Serial.print(F("\n rand:"));
+      Serial.print(randNumber);
+      color = Wheel(((i * 256 / strip.numPixels()) + j+r_array[randNumber]) & 255);
+      strip.setPixelColor(i, color);
+      //Serial.print(F("\n color:"));
+      //Serial.print(color);
     }
     strip.show();
     delay(wait);
@@ -72,12 +100,15 @@ void rainbowCycle(uint16_t wait) {
 
 void setup() {
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
-#if defined (__AVR_ATtiny85__)
+  #if defined (__AVR_ATtiny85__)
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
-#endif
+  #endif
   // End of trinket special code
 
- pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(19200);
+  Serial.println(F("RGB Night Light v0.2"));
+
+  pinMode(LED_BUILTIN, OUTPUT);
 
   strip.begin(); // This initializes the NeoPixel library.
 
@@ -85,33 +116,11 @@ void setup() {
 }
 
 
-// // the loop function runs over and over again forever
-// void loop() {
-//   digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-//   delay(1000);                       // wait for a second
-//   digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-//   delay(1000);                       // wait for a second
-// }
-
-// void loop() {
-//
-//   // For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
-//
-//   for(int i=0;i<NUMPIXELS;i++){
-//
-//     // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
-//     pixels.setPixelColor(i, pixels.Color(0,150,0)); // Moderately bright green color.
-//
-//     pixels.show(); // This sends the updated pixel color to the hardware.
-//
-//     delay(delayval); // Delay for a period of time (in milliseconds).
-//     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-//   }
-// }
-
 void loop() {
 
   //rainbow(200);
   rainbowCycle(100);
+  //rainbow(100);
+
   //theaterChaseRainbow(100);
 }
