@@ -24,22 +24,26 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800
 
 int delayval = 500; // delay for half a second
 
-uint8_t loop_n=0;
-uint8_t randNumber=0;
-uint8_t r_array[]={80,175,0};
-
+uint16_t loop_n=0;
+uint16_t randNumber=0;
+uint8_t r_array[3];
+uint8_t segment_i=0;
+uint8_t change_intensity=110;
 
 
 struct color {
   uint8_t r;
   bool r_canup;
   bool r_candown;
+  uint8_t r_rand;
   uint8_t g;
   bool g_canup;
   bool g_candown;
+  uint8_t g_rand;
   uint8_t b;
   bool b_canup;
   bool b_candown;
+  uint8_t b_rand;
 };
 
 color led[3];
@@ -56,18 +60,6 @@ void setup() {
   #endif
   // End of trinket special code
 
-  led[0].r=10;
-  led[0].g=0;
-  led[0].b=0;
-
-  led[1].r=0;
-  led[1].g=50;
-  led[1].b=0;
-
-  led[2].r=0;
-  led[2].g=0;
-  led[2].b=150;
-
   Serial.begin(19200);
   printf_begin();
   printf("RGB Night Light v0.2");
@@ -77,65 +69,101 @@ void setup() {
   strip.begin(); // This initializes the NeoPixel library.
 
   digitalWrite(LED_BUILTIN, HIGH);
+
+  randomSeed(analogRead(0));
+
+  led[0].r=random(0, 30);
+  led[0].g=random(100, 256);
+  led[0].b=random(0, 100);
+
+  led[1].r=0; //random(0, 256);
+  led[1].g=random(0, 50);
+  led[1].b=random(0, 256);
+
+  led[2].r=random(100, 256);
+  led[2].g=random(0, 50);
+  led[2].b=random(0, 100);
 }
 
 
 void loop() {
 
-  //RGB iteration
-  for(int i=0;i<3;i++){ //3 due to RGB
+  for(int segment_i=0;segment_i<NUMPIXELS;segment_i++){
 
-    switch (i) {
-      case 0:
-      if (loop_n%40==0) randNumber = random(0, 2);
-      //Red
-      if (led[0].r<255) led[0].r_canup=true;
-      else led[0].r_canup=false;
+    if (loop_n%change_intensity==0){
+      randomSeed(analogRead(0));
+      randNumber=random(111, 1000);
 
-      if (led[0].r>0) led[0].r_candown=true;
-      else led[0].r_candown=false;
 
-      if (led[0].r_canup && randNumber==1) led[0].r++;
-      if (led[0].r_candown && randNumber==0) led[0].r--;
-      break;
-
-      case 1:
-      if (loop_n%40==0) randNumber = random(0, 2);
-      //Green
-      if (led[0].g<255) led[0].g_canup=true;
-      else led[0].g_canup=false;
-
-      if (led[0].g>0) led[0].g_candown=true;
-      else led[0].g_candown=false;
-
-      if (led[0].g_canup && randNumber==1) led[0].g++;
-      if (led[0].g_candown && randNumber==0) led[0].g--;
-
-      break;
-
-      case 2:
-      if (loop_n%40==0) randNumber = random(0, 2);
-      //Blue
-      if (led[0].b<255) led[0].b_canup=true;
-      else led[0].b_canup=false;
-
-      if (led[0].b>0) led[0].b_candown=true;
-      else led[0].b_candown=false;
-
-      if (led[0].b_canup && randNumber==1) led[0].b++;
-      if (led[0].b_candown && randNumber==0) led[0].b--;
-
-      break;
+      uint8_t n=0;
+      while (randNumber > 0) {
+        r_array[n]=(randNumber % 10);
+        randNumber = randNumber / 10;
+        n++;
+      }
     }
 
-    strip.setPixelColor(0, strip.Color(led[0].r,led[0].g,led[0].b)); // Moderately bright green color.
+
+    //iteration throught RGB
+    for(int color_i=0;color_i<3;color_i++){ //3 due to RGB
+
+      switch (color_i) {
+        case 0:
+        if (loop_n%change_intensity==0) led[segment_i].r_rand = r_array[color_i]%2;
+
+
+        //Red
+        if (led[segment_i].r<255) led[segment_i].r_canup=true;
+        else led[segment_i].r_canup=false;
+
+        if (led[segment_i].r>0) led[segment_i].r_candown=true;
+        else led[segment_i].r_candown=false;
+
+        if (led[segment_i].r_canup && led[segment_i].r_rand==1) led[segment_i].r++;
+        if (led[segment_i].r_candown && led[segment_i].r_rand==0) led[segment_i].r--;
+
+        break;
+
+        case 1:
+        if (loop_n%change_intensity==0) led[segment_i].g_rand = r_array[color_i]%2;
+
+        //printf("loop_n %d, segment: %d, G rand %d R: %d, G: %d, B: %d \n", loop_n, segment_i, led[segment_i].g_rand, led[segment_i].r, led[segment_i].g, led[segment_i].b);
+        //Green
+        if (led[segment_i].g<255) led[segment_i].g_canup=true;
+        else led[segment_i].g_canup=false;
+
+        if (led[segment_i].g>0) led[segment_i].g_candown=true;
+        else led[segment_i].g_candown=false;
+
+        if (led[segment_i].g_canup && led[segment_i].g_rand==1) led[segment_i].g++;
+        if (led[segment_i].g_candown && led[segment_i].g_rand==0) led[segment_i].g--;
+
+        break;
+
+        case 2:
+        if (loop_n%change_intensity==0) led[segment_i].b_rand = r_array[color_i]%2;
+
+        //printf("loop_n %d, segment: %d, B rand %d R: %d, G: %d, B: %d \n", loop_n, segment_i, led[segment_i].b_rand, led[segment_i].r, led[segment_i].g, led[segment_i].b);
+        //Blue
+        if (led[segment_i].b<255) led[segment_i].b_canup=true;
+        else led[segment_i].b_canup=false;
+
+        if (led[segment_i].b>0) led[segment_i].b_candown=true;
+        else led[segment_i].b_candown=false;
+
+        if (led[segment_i].b_canup && led[segment_i].b_rand==1) led[segment_i].b++;
+        if (led[segment_i].b_candown && led[segment_i].b_rand==0) led[segment_i].b--;
+
+        break;
+      }
+    }
+
+    printf("loop_n %d, segment: %d, Rrand %d, Grand %d, Brand %d, R: %d, G: %d, B: %d \n", loop_n, segment_i,led[segment_i].r_rand, led[segment_i].g_rand, led[segment_i].b_rand, led[segment_i].r, led[segment_i].g, led[segment_i].b);
+
+
+    strip.setPixelColor(segment_i, strip.Color(led[segment_i].r,led[segment_i].g,led[segment_i].b)); // Moderately bright green color.
     strip.show(); // This sends the updated pixel color to the hardware.
-
-    printf("loop_n %d, randNumber %d \n", loop_n, randNumber);
-    printf("led[0] R: %d, G: %d, B: %d \n", led[0].r, led[0].g, led[0].b);
-
-    loop_n++;
   }
-  delay(80); // Delay for a period of time (in milliseconds).
-
+  loop_n++;
+  delay(50); // Delay for a period of time (in milliseconds).
 }
