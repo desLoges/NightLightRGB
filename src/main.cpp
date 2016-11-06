@@ -24,79 +24,30 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800
 
 int delayval = 500; // delay for half a second
 
+uint8_t loop_n=0;
+uint8_t randNumber=0;
 uint8_t r_array[]={80,175,0};
+
+
+
+struct color {
+  uint8_t r;
+  bool r_canup;
+  bool r_candown;
+  uint8_t g;
+  bool g_canup;
+  bool g_candown;
+  uint8_t b;
+  bool b_canup;
+  bool b_candown;
+};
+
+color led[3];
 ///////////////////////////////////////////////////////////////
 
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-
-  if(WheelPos < 85) {
-
-    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if(WheelPos < 170) {
-    WheelPos -= 85;
-
-    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-
-  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-}
-
-//uint32_t RandomDimmer(void){
-
-
-  //return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-//}
-
-void rainbow(uint8_t wait) {
-  uint16_t i, j;
-  uint32_t randNumber;
-  randNumber = random(1, 5);
-  Serial.print(F("\n rand:"));
-  Serial.print(randNumber);
-
-  for(j=0; j<256; j++) {
-    for(i=0; i<strip.numPixels(); i++) {
-
-      strip.setPixelColor(i, Wheel((i+j)));
-    }
-    strip.show();
-    delay(wait);
-  }
-}
-
-// Slightly different, this makes the rainbow equally distributed throughout
-void rainbowCycle(uint16_t wait) {
-  uint16_t i, j;
-  uint32_t color;
-
-
-  for(j=0; j<256; j++) { // 5 cycles of all colors on wheel
-    for(i=0; i< strip.numPixels(); i++) {
-      uint8_t randNumber;
-      randNumber = random(0, 2);
-      Serial.print(F("\n rand:"));
-      Serial.print(randNumber);
-      color = Wheel(((i * 256 / strip.numPixels()) + j+r_array[randNumber]) & 255);
-      strip.setPixelColor(i, color);
-      //Serial.print(F("\n color:"));
-      //Serial.print(color);
-    }
-    strip.show();
-    delay(wait);
-  }
-}
-
 
 ///////////////////////////////////////////////////////////////////////
-
-
-
 
 void setup() {
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
@@ -105,8 +56,21 @@ void setup() {
   #endif
   // End of trinket special code
 
+  led[0].r=10;
+  led[0].g=0;
+  led[0].b=0;
+
+  led[1].r=0;
+  led[1].g=50;
+  led[1].b=0;
+
+  led[2].r=0;
+  led[2].g=0;
+  led[2].b=150;
+
   Serial.begin(19200);
-  Serial.println(F("RGB Night Light v0.2"));
+  printf_begin();
+  printf("RGB Night Light v0.2");
 
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -118,9 +82,60 @@ void setup() {
 
 void loop() {
 
-  //rainbow(200);
-  rainbowCycle(100);
-  //rainbow(100);
+  //RGB iteration
+  for(int i=0;i<3;i++){ //3 due to RGB
 
-  //theaterChaseRainbow(100);
+    switch (i) {
+      case 0:
+      if (loop_n%40==0) randNumber = random(0, 2);
+      //Red
+      if (led[0].r<255) led[0].r_canup=true;
+      else led[0].r_canup=false;
+
+      if (led[0].r>0) led[0].r_candown=true;
+      else led[0].r_candown=false;
+
+      if (led[0].r_canup && randNumber==1) led[0].r++;
+      if (led[0].r_candown && randNumber==0) led[0].r--;
+      break;
+
+      case 1:
+      if (loop_n%40==0) randNumber = random(0, 2);
+      //Green
+      if (led[0].g<255) led[0].g_canup=true;
+      else led[0].g_canup=false;
+
+      if (led[0].g>0) led[0].g_candown=true;
+      else led[0].g_candown=false;
+
+      if (led[0].g_canup && randNumber==1) led[0].g++;
+      if (led[0].g_candown && randNumber==0) led[0].g--;
+
+      break;
+
+      case 2:
+      if (loop_n%40==0) randNumber = random(0, 2);
+      //Blue
+      if (led[0].b<255) led[0].b_canup=true;
+      else led[0].b_canup=false;
+
+      if (led[0].b>0) led[0].b_candown=true;
+      else led[0].b_candown=false;
+
+      if (led[0].b_canup && randNumber==1) led[0].b++;
+      if (led[0].b_candown && randNumber==0) led[0].b--;
+
+      break;
+    }
+
+    strip.setPixelColor(0, strip.Color(led[0].r,led[0].g,led[0].b)); // Moderately bright green color.
+    strip.show(); // This sends the updated pixel color to the hardware.
+
+    printf("loop_n %d, randNumber %d \n", loop_n, randNumber);
+    printf("led[0] R: %d, G: %d, B: %d \n", led[0].r, led[0].g, led[0].b);
+
+    loop_n++;
+  }
+  delay(80); // Delay for a period of time (in milliseconds).
+
 }
