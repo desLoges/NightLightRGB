@@ -7,5 +7,3 @@ from the chinese lamp called Star Master and replaced them with WS2812B. The con
 
 Start Master ambient lamp:
 http://gloimg.gearbest.com/gb/pdm-product-pic/Clothing/2016/05/23/goods-img/1475546708766897560.jpg
-
-WORK IN PROGRESS...
